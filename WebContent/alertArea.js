@@ -34,6 +34,33 @@ var boxBounds;
 var boxInfoWindow;
 var boxArea;
 
+var shape;
+var markerCollection;
+
+function addPoint(e) {
+  var vertices = shape.getPath();
+  newMarker = new google.maps.Marker({
+		map: map,
+		draggable: true,
+		title: 'box corner'
+		});
+  
+  vertices.push(e.latLng);
+  document.capForm.capPolygon.value += e.latLng['k']+","+e.latLng['A']+" ";
+  makeXML();
+  newMarker.setPosition(e.latLng);
+  markerCollection.push(newMarker);
+  new google.maps.LatLng(e.latLng['k'],e.latLng['A']);
+  new google.maps.event.trigger(newMarker, 'dragend',changePoint);
+ //console.log(e.latLng['k']);	
+  
+}
+
+function changePoint(){
+
+}
+
+
 function getCircle() {
 	// Here because the coordinates in the circle element changed 
 	//  or the editor clicked the GetCircle() hyperlink. 
@@ -88,8 +115,8 @@ function getRectangle() {
 		newBox(); 
 		return; 
 	}
-	parseBox(capPolygon);  // the parsing will emit alert message for any error
-	if(!boxParsed) { 
+	//parseBox(capPolygon);  // the parsing will emit alert message for any error
+	if(!boxParsed) { 					
 		return; 
 	}
 	// Now the box coordinates are set. Use these to center map on 
@@ -335,11 +362,7 @@ function parseBox(boxCoordinates) {
 	var SW, NW, NE, SE, LatLng;
 	var boundingBox = boxCoordinates.trim();
 	var coordPairs = boundingBox.split(" ");
-	if((coordPairs.length !== 4) && (coordPairs.length !== 5))  { 
-		alert("Error in checking polygon: must have four or five 'lat,lng' "+
-				"coordinate pairs, with one space between each pair: " + boxCoordinates);
-		return;
-	}
+	
 	SW = coordPairs[0];
 	if(!checkLatLng(SW,"first",boxCoordinates)) { return;}
 	LatLng = SW.split(",");
@@ -478,7 +501,7 @@ function degreesbyZoom(zoomLevel) {
 		return 45;
 		break;
 	case (zoomLevel == 2): 
-		return 90;
+	 	return 90;
 		break;
 	case (zoomLevel == 1): 
 		return 180;
@@ -578,16 +601,22 @@ function initMap() {
 		fillOpacity: 0.1
 		});
 	boxInfoWindow = new google.maps.InfoWindow;
-	boxMarker1 = new google.maps.Marker({
-		map: map,
-		draggable: true,
-		title: 'box corner'
-		});
-	boxMarker2 = new google.maps.Marker({
-		map: map,
-		draggable: true,
-		title: 'box corner'
-		});
+	
+
+
+	//Polygon
+	shape = new google.maps.Polygon({
+    			strokeColor: '#ff0000',
+    			strokeOpacity: 0.8,
+    			strokeWeight: 2,
+    			fillColor: '#ff0000',
+    			fillOpacity: 0.35
+  	});
+
+	shape.setMap(map);
+
+	google.maps.event.addListener(map, 'click', addPoint);
+
 	google.maps.event.addListener(boxMarker1, 'dragend', drawBox);
 	google.maps.event.addListener(boxMarker2, 'dragend', drawBox);
 }
@@ -743,6 +772,8 @@ function useBoxControl(useBoxDiv, map) {
 	// add onclick behavior for the control
 	google.maps.event.addDomListener(useBoxUI, 'click', useBox);
 }
+
+
 function deleteBoxControl(deleteBoxDiv, map) {
 	// Set padding to offset the control from the other controls
 	deleteBoxDiv.style.padding = '2px';
